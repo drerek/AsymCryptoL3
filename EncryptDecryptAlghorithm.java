@@ -5,11 +5,11 @@ interface EncryptDecryptAlghorithm {
     BigInteger openKey = null;
     void generateKeyPair();
 
-    Map<String, BigInteger> encrypt(BigInteger message);
+    Map<String, BigInteger> encrypt(Abonent destAbon, BigInteger message);
 
-    BigInteger decrypt(Map<String, BigInteger> input);
+    BigInteger decrypt(Abonent fromAbon, Map<String, BigInteger> input);
 
     Map<String, BigInteger> sign(BigInteger message);
 
-    boolean verify(Map<String, BigInteger> signedMessage);
+    boolean verify(Abonent fromAbon, Map<String, BigInteger> signedMessage);
 }

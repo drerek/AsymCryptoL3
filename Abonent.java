@@ -49,18 +49,22 @@ public class Abonent implements EncryptDecryptAlghorithm{
         else return 0;
     }
 
+    public BigInteger getN(){
+        return n;
+    }
+
     @Override
     public void generateKeyPair() {
 
     }
 
     @Override
-    public Map<String, BigInteger> encrypt(BigInteger message) {
+    public Map<String, BigInteger> encrypt(Abonent destAbon, BigInteger message) {
         return null;
     }
 
     @Override
-    public BigInteger decrypt(Map<String, BigInteger> input) {
+    public BigInteger decrypt(Abonent fromAbon, Map<String, BigInteger> input) {
         return null;
     }
 
@@ -70,7 +74,8 @@ public class Abonent implements EncryptDecryptAlghorithm{
     }
 
     @Override
-    public boolean verify(Map<String, BigInteger> signedMessage) {
-        return false;
+    public boolean verify(Abonent fromAbon, Map<String, BigInteger> signedMessage) {
+        return signedMessage.get("sign").pow(2).mod(fromAbon.getN()).compareTo(signedMessage.get("message")) == 0;
     }
+
 }
