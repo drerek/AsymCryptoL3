@@ -4,7 +4,7 @@ import java.util.Map;
 public class Abonent implements EncryptDecryptAlghorithm{
     public BigInteger n;
 
-    private int yakobi(BigInteger a, BigInteger b){
+    private int yakobiSymbol(BigInteger a, BigInteger b){
         if (b.compareTo(BigInteger.ONE) <= 0 || b.mod(BigInteger.valueOf(2)).compareTo(BigInteger.ZERO) == 0 )
             throw new IllegalArgumentException();
         //1. Verification of mutual simplicity
@@ -39,15 +39,16 @@ public class Abonent implements EncryptDecryptAlghorithm{
 
         //6. Exit from algorithm
         if (a.compareTo(BigInteger.ZERO) != 0) {
-            return r.multiply(BigInteger.valueOf(yakobi(a,b))).intValue();
+            return r.multiply(BigInteger.valueOf(yakobiSymbol(a,b))).intValue();
         }
         return r.intValue();
     }
 
-    public static void main(String[] args) {
-        Abonent a = new Abonent();
-        System.out.println(a.yakobi(BigInteger.valueOf(219), BigInteger.valueOf(383)));
+    private int iversonSymbol(int yakoby){
+        if (yakoby == 1) return 1;
+        else return 0;
     }
+
     @Override
     public void generateKeyPair() {
 
