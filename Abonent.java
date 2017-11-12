@@ -5,8 +5,8 @@ public class Abonent implements EncryptDecryptAlghorithm{
     public BigInteger n;
 
     private int yakobi(BigInteger a, BigInteger b){
-//        if (b.compareTo(BigInteger.ONE) <= 0 || b.mod(BigInteger.valueOf(2)).compareTo(BigInteger.ZERO) == 0 )
-//            throw new IllegalArgumentException();
+        if (b.compareTo(BigInteger.ONE) <= 0 || b.mod(BigInteger.valueOf(2)).compareTo(BigInteger.ZERO) == 0 )
+            throw new IllegalArgumentException();
         //1. Verification of mutual simplicity
         if (a.gcd(b).compareTo(BigInteger.ONE) != 0) {
             return 0;
