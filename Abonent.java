@@ -1,5 +1,4 @@
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -57,7 +56,6 @@ public class Abonent implements EncryptDecryptAlghorithm{
 
     private BigInteger prepareMessage(BigInteger message){
         int l = n.bitLength()/8;
-        System.out.println("l="+l+" message.byteValue="+message.bitLength()/8);
         if (message.bitLength()/8+1 > l-10) throw new IllegalArgumentException();
         BigInteger r = new BigInteger(64,new Random());
 
@@ -94,7 +92,7 @@ public class Abonent implements EncryptDecryptAlghorithm{
     @Override
     public Map<String, BigInteger> encrypt(Abonent destAbon, BigInteger message) {
         BigInteger preparedMessage = prepareMessage(message);
-        BigInteger y = preparedMessage.multiply(message.add(destAbon.getB())).mod(destAbon.getB());
+        BigInteger y = preparedMessage.multiply(message.add(destAbon.getB())).mod(destAbon.getN());
         BigInteger c1 = getC1(destAbon,preparedMessage);
         BigInteger c2 = getC2(destAbon, preparedMessage);
         return new HashMap<String,BigInteger>(){{
@@ -114,8 +112,7 @@ public class Abonent implements EncryptDecryptAlghorithm{
 
         BigInteger u = uv[0];
         BigInteger v = uv[1];
-        System.out.println("uv="+ Arrays.toString(uv));
-        System.out.println(u.multiply(q).add(v.multiply(p)));
+        System.out.println("u*q+v*p="+u.multiply(q).add(v.multiply(p)));
 
 
         BigInteger preparedMessage = (b.divide(BigInteger.valueOf(2)).negate()).add(u.multiply(p).multiply(temp1)).mod(n);
@@ -169,7 +166,7 @@ public class Abonent implements EncryptDecryptAlghorithm{
             y2 = y1;
             y1 =y;
         }
-        if (flag == true) return new BigInteger[]{x2,y2};
+        if (flag) return new BigInteger[]{x2,y2};
         return new BigInteger[]{y2,x2};
     }
 
