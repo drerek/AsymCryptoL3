@@ -181,7 +181,7 @@ public class Abonent implements EncryptDecryptAlghorithm{
 
         BigInteger finalPreparedMessage = preparedMessage;
         return new HashMap<String,BigInteger>(){{
-            put("sign",GCD(p,q)[0].multiply(p).multiply(temp1));
+            put("sign",GCD(p,q)[0].multiply(p).multiply(temp1).mod(n));
             put("message", finalPreparedMessage);
         }};
     }
@@ -197,6 +197,6 @@ public class Abonent implements EncryptDecryptAlghorithm{
         Abonent b = new Abonent();
         a.generateKeyPair();
         b.generateKeyPair();
-        System.out.println(b.decrypt(b,a.encrypt(b,BigInteger.valueOf(128))));
+        System.out.println(b.verify(a,a.sign(BigInteger.valueOf(22141241))));
     }
 }
