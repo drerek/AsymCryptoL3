@@ -173,7 +173,8 @@ public class Abonent implements EncryptDecryptAlghorithm{
     @Override
     public Map<String, BigInteger> sign(BigInteger message) {
         BigInteger preparedMessage = prepareMessage(message);
-        while (yakobiSymbol(preparedMessage,p) != 1 || yakobiSymbol(preparedMessage,q) != 1){
+        while (yakobiSymbol(preparedMessage,p) != 1 && yakobiSymbol(preparedMessage,q) != 1){
+            this.generateKeyPair();
             preparedMessage = prepareMessage(message);
         }
         BigInteger temp1 = preparedMessage.modPow(p.add(BigInteger.ONE).divide(BigInteger.valueOf(4)),p);
