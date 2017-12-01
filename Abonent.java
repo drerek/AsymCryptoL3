@@ -125,7 +125,7 @@ public class Abonent implements EncryptDecryptAlghorithm{
 
         BigInteger u = uv[1];
         BigInteger v = uv[0];
-      //  System.out.println("u*p+v*q="+u.multiply(p).add(v.multiply(q)))
+      //  System.out.println("u*p+v*q="+u.multiply(p).add(v.multiply(q)));
 
             BigInteger x1 = u.multiply(p).multiply(temp2).add(v.multiply(q).multiply(temp1)).mod(n);
         BigInteger preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x1).mod(n);
