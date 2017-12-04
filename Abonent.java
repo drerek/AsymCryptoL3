@@ -10,6 +10,22 @@ public class Abonent implements EncryptDecryptAlghorithm{
     private BigInteger b;
     private BigInteger r;
     private int l;
+    private BigInteger protoNumber;
+    private BigInteger getP() {
+        return p;
+    }
+
+    private BigInteger getQ() {
+        return q;
+    }
+
+    public void setProtoNumber(BigInteger protoNumber) {
+        this.protoNumber = protoNumber;
+    }
+
+    public BigInteger getProtoNumber() {
+        return protoNumber;
+    }
 
     private static int yakobiSymbol(BigInteger a, BigInteger b){
         if (b.compareTo(BigInteger.ONE) <= 0 || b.mod(BigInteger.valueOf(2)).compareTo(BigInteger.ZERO) == 0 )
@@ -180,9 +196,10 @@ public class Abonent implements EncryptDecryptAlghorithm{
     public Map<String, BigInteger> sign(BigInteger message) {
 
         BigInteger preparedMessage = prepareMessage(message);
-        while (yakobiSymbol(preparedMessage,p) != 1 && yakobiSymbol(preparedMessage,q) != 1){
+        while (true){
             //this.generateKeyPair();
             preparedMessage = prepareMessage(message);
+            if(yakobiSymbol(preparedMessage,p) == 1 && yakobiSymbol(preparedMessage,q) == 1) break;
         }
         System.out.println("preparedMessage="+preparedMessage);
         BigInteger[] uv = GCD(p,q);
@@ -203,13 +220,73 @@ public class Abonent implements EncryptDecryptAlghorithm{
 
     @Override
     public boolean verify(Abonent fromAbon, Map<String, BigInteger> signedMessage) {
-        return signedMessage.get("sign").pow(2).mod(fromAbon.getN()).compareTo((signedMessage.get("message"))) == 0;
+        return fromAbon.deformationMessage(signedMessage.get("sign").pow(2).mod(fromAbon.getN())).compareTo((signedMessage.get("message"))) == 0;
     }
 
     public BigInteger deformationMessage(BigInteger text){
         return (text.subtract(r).subtract(BigInteger.valueOf(255).multiply(BigInteger.valueOf(2).pow(8*(l-2))))).divide(BigInteger.valueOf(2).pow(64));
     }
 
+    public void sendProtoNumber(Abonent destAbon, BigInteger number){ destAbon.setProtoNumber(number);}
+
+    public void generateProtoNumber(){
+        this.setProtoNumber(new BigInteger(64, new Random()));
+    };
+
+    public BigInteger protokol(Abonent B){
+        this.generateProtoNumber();
+        this.sendProtoNumber(B, this.getProtoNumber().pow(4).mod(B.getN()));
+        BigInteger[] uv = GCD(B.p, B.q);
+
+        BigInteger u = uv[1];
+        BigInteger v = uv[0];
+
+        BigInteger temp1 = B.getProtoNumber().modPow((B.p.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),B.p);
+        BigInteger temp2 = B.getProtoNumber().modPow((B.q.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),B.q);
+        BigInteger x1 = u.multiply(B.p).multiply(temp2).add(v.multiply(B.q).multiply(temp1)).mod(n);
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        x1 = u.multiply(B.p).multiply(temp2).subtract(v.multiply(B.q).multiply(temp1)).mod(B.getN());
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        x1 = (u.multiply(B.p).multiply(temp2).negate()).add(v.multiply(B.q).multiply(temp1)).mod(B.getN());
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        x1 = (u.multiply(B.p).multiply(temp2).negate()).subtract(v.multiply(B.q).multiply(temp1)).mod(B.getN());
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+
+        return null;
+    }
+
+    public boolean checkProtokol(Abonent B){
+        return this.protokol(B).compareTo(this.getProtoNumber().pow(2).mod(B.getN()))==0;
+    }
+
+    public BigInteger attackProtocol(Abonent B){
+        this.generateProtoNumber();
+        this.sendProtoNumber(B, this.getProtoNumber().pow(2).mod(B.getN()));
+        BigInteger[] uv = GCD(B.p, B.q);
+        BigInteger u = uv[1];
+        BigInteger v = uv[0];
+        BigInteger temp1 = B.getProtoNumber().modPow((B.p.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),B.p);
+        BigInteger temp2 = B.getProtoNumber().modPow((B.q.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),B.q);
+        BigInteger x1 = u.multiply(B.p).multiply(temp2).add(v.multiply(B.q).multiply(temp1)).mod(n);
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        x1 = u.multiply(B.p).multiply(temp2).subtract(v.multiply(B.q).multiply(temp1)).mod(B.getN());
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        x1 = (u.multiply(B.p).multiply(temp2).negate()).add(v.multiply(B.q).multiply(temp1)).mod(B.getN());
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        x1 = (u.multiply(B.p).multiply(temp2).negate()).subtract(v.multiply(B.q).multiply(temp1)).mod(B.getN());
+        if(yakobiSymbol(x1,B.getN()) == 1) return x1;
+        return null;
+    }
+
+    public boolean checkAttackProtokol(Abonent B){
+        if(this.attackProtocol(B).equals(this.getProtoNumber())) {
+            return B.getN().gcd(this.attackProtocol(B).add(this.getProtoNumber())).equals(B.p) || B.getN().gcd(this.attackProtocol(B).add(this.getProtoNumber())).equals(B.q);
+        }
+        if(this.attackProtocol(B).equals(this.getProtoNumber().negate())){
+            return B.getN().gcd(this.attackProtocol(B).add(this.getProtoNumber().negate())).equals(B.p) || B.getN().gcd(this.attackProtocol(B).add(this.getProtoNumber().negate())).equals(B.q);
+        }
+        return false;
+    }
 
     public static void main(String[] args) {
         Abonent a = new Abonent();
@@ -220,7 +297,10 @@ public class Abonent implements EncryptDecryptAlghorithm{
         BigInteger text = b.decrypt(a,a.encrypt(b,BigInteger.valueOf(78)));
 //        System.out.println(text);
 //        System.out.println(a.deformationMessage(text));
-        System.out.println(b.verify(a,a.sign(BigInteger.valueOf(78))));
+        //System.out.println(b.verify(a,a.sign(BigInteger.valueOf(78))));
+        //System.out.println(a.deformationMessage(a.sign(BigInteger.valueOf(78)).get("sign").pow(2).mod(a.getN())));
+        //System.out.println(a.checkProtokol(b));
+        System.out.println(a.checkAttackProtokol(b));
 
     }
 }
