@@ -8,6 +8,8 @@ public class Abonent implements EncryptDecryptAlghorithm{
     private BigInteger q;
     private BigInteger n;
     private BigInteger b;
+    private BigInteger r;
+    private int l;
 
     private static int yakobiSymbol(BigInteger a, BigInteger b){
         if (b.compareTo(BigInteger.ONE) <= 0 || b.mod(BigInteger.valueOf(2)).compareTo(BigInteger.ZERO) == 0 )
@@ -50,13 +52,20 @@ public class Abonent implements EncryptDecryptAlghorithm{
     }
 
     private BigInteger prepareMessage(BigInteger message){
-        int l = n.bitLength()/8;
+        l = n.bitLength()/8;
         if (message.bitLength()/8+1 > l-10) throw new IllegalArgumentException();
-        BigInteger r = new BigInteger(64,new Random());
-        System.out.println("r " + r.toString(16));
+        BigInteger preparedMessage = BigInteger.ZERO;
+        //while(!(preparedMessage.gcd(n).compareTo(BigInteger.ONE) == 0)) {
+            r = new BigInteger(64, new Random());
+            System.out.println("r " + r.toString(16));
+            preparedMessage = BigInteger.valueOf(255).multiply(BigInteger.valueOf(2).pow(8*(l-2)))
+                    .add(message.multiply(BigInteger.valueOf(2).pow(64))).add(r);
+        //}
 
-        return BigInteger.valueOf(255).multiply(BigInteger.valueOf(2).pow(8*(l-2)))
-                .add(message.multiply(BigInteger.valueOf(2).pow(64))).add(r);
+        return preparedMessage;
+
+        //System.out.println(n.gcd(message));
+        //return message;
     }
     public BigInteger getN(){
         return n;
@@ -79,8 +88,9 @@ public class Abonent implements EncryptDecryptAlghorithm{
     public void generateKeyPair() {
         p = generateNumber();
         q = generateNumber();
-        b = new BigInteger(200, new Random());
+        b = generateNumber();//new BigInteger(200, new Random());
         n = p.multiply(q);
+        //System.out.println(b.gcd(n));
     }
     @Override
     public String toString(){
@@ -117,15 +127,17 @@ public class Abonent implements EncryptDecryptAlghorithm{
         BigInteger root = input.get("cypherText").add(b.multiply(b).multiply(BigInteger.valueOf(4).modInverse(fromAbon.getN()))).mod(n);
 
         BigInteger temp1 = root.modPow((p.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),p);
-
-        BigInteger temp2 = root.negate().modPow((q.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),q);
-
+        BigInteger temp3 = root.negate().modPow((p.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),p);
+        BigInteger temp2 = root.modPow((q.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),q);
+        BigInteger temp4 = root.negate().modPow((q.add(BigInteger.ONE)).divide(BigInteger.valueOf(4)),q);
 
         BigInteger[] uv = GCD(p,q);
 
         BigInteger u = uv[1];
         BigInteger v = uv[0];
-      //  System.out.println("u*p+v*q="+u.multiply(p).add(v.multiply(q)));
+        u = u.abs();
+        v = v.abs();
+        //System.out.println("u*p+v*q="+u.multiply(p).add(v.multiply(q)));
 
             BigInteger x1 = u.multiply(p).multiply(temp2).add(v.multiply(q).multiply(temp1)).mod(n);
         BigInteger preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x1).mod(n);
@@ -138,6 +150,20 @@ public class Abonent implements EncryptDecryptAlghorithm{
         if (input.get("c1") == getC1(this,preparedMessage) && input.get("c2")== getC2(this,preparedMessage)) return preparedMessage;
             BigInteger x4 = (u.multiply(p).multiply(temp2).negate()).subtract(v.multiply(q).multiply(temp1)).mod(n);
         preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x4).mod(n);
+        if (input.get("c1") == getC1(this,preparedMessage) && input.get("c2")== getC2(this,preparedMessage)) return preparedMessage;
+
+
+        BigInteger x5 = u.multiply(p).multiply(temp4).add(v.multiply(q).multiply(temp3)).mod(n);
+        preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x5).mod(n);
+        if (input.get("c1") == getC1(this,preparedMessage) && input.get("c2")== getC2(this,preparedMessage)) return preparedMessage;
+        BigInteger x6 = u.multiply(p).multiply(temp4).subtract(v.multiply(q).multiply(temp3)).mod(n);
+        preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x6).mod(n);
+        if (input.get("c1") == getC1(this,preparedMessage) && input.get("c2")== getC2(this,preparedMessage)) return preparedMessage;
+        BigInteger x7 = (u.multiply(p).multiply(temp4).negate()).add(v.multiply(q).multiply(temp3)).mod(n);
+        preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x7).mod(n);
+        if (input.get("c1") == getC1(this,preparedMessage) && input.get("c2")== getC2(this,preparedMessage)) return preparedMessage;
+        BigInteger x8 = (u.multiply(p).multiply(temp4).negate()).subtract(v.multiply(q).multiply(temp3)).mod(n);
+        preparedMessage = (b.multiply(BigInteger.valueOf(2).modInverse(n)).negate()).add(x8).mod(n);
         if (input.get("c1") == getC1(this,preparedMessage) && input.get("c2")== getC2(this,preparedMessage)) return preparedMessage;
 
         return null;
@@ -197,12 +223,18 @@ public class Abonent implements EncryptDecryptAlghorithm{
         return signedMessage.get("sign").pow(2).mod(fromAbon.getN()).compareTo(signedMessage.get("message")) == 0;
     }
 
+    public BigInteger deformationMessage(BigInteger text){
+        return (text.subtract(r).subtract(BigInteger.valueOf(255).multiply(BigInteger.valueOf(2).pow(8*(l-2))))).divide(BigInteger.valueOf(2).pow(64));
+    }
+
 
     public static void main(String[] args) {
         Abonent a = new Abonent();
 
         a.generateKeyPair();
-        System.out.println(a.decrypt(a,a.encrypt(a,BigInteger.valueOf(4410))));
+        BigInteger text = a.decrypt(a,a.encrypt(a,BigInteger.valueOf(4410)));
+        System.out.println(text);
+        //System.out.println(a.deformationMessage(text));
 
 
     }
